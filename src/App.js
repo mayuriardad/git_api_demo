@@ -1,12 +1,17 @@
 import React from 'react';
 import './App.css';
+import RepoCard from './RepoCard';
 
 function App() {
 
   const [username, setUsername] = React.useState('');
-
   const [userRepos, setUserRepos] = React.useState([])
+
+  const [isUsernameValid, setisUsernameValid] = React.useState(true)
   const getRepo = () => {
+    if (!username) {
+      setisUsernameValid(false)
+    }
     fetch(`https://api.github.com/users/${username}/repos`).then((response) => {
       return response.json()
     }).then((data) => {
@@ -14,25 +19,38 @@ function App() {
     })
   }
 
+  const handleChange = (event) => {
+    if (event.target.value) {
+      setisUsernameValid(true)
+    }
+    setUsername(event.target.value)
+  }
+
   return (
-    <div className="App">
-        <label>Enter username</label>
-        <input name='username' onChange={(event) => setUsername(event.target.value)} value={username}/>
-        <button onClick={getRepo}>Search Repositories</button>
-        <table>
-          <tbody>
-          {userRepos.map((repo) => {
-          return <tr key={repo.id}>
-            <td>
-              <a href={repo.html_url} target='_blank' rel='noopener noreferrer'>{repo.name}</a>
-              </td>
-            </tr>
-          })}
-          </tbody>
-        </table>
-        
+    <div className='container'>
+      <div className="form-group w-50">
+        <label>Enter username:</label>
+        <input className='form-control' type='text' name='username' onChange={handleChange} value={username} />
+      </div>
+      {!isUsernameValid && <h5 className='text-danger'>Please enter valid username</h5>}
+      <div>
+        <button className="btn btn-primary mb-1" onClick={getRepo}>Search Repositories</button>
+        {!!userRepos.length &&
+          <>
+            <h5 className='mb-1'>{`Public Repositories of ${username}`}</h5>
+            <div class="row">
+              {userRepos.map((repo, index) => {
+                return <>
+                  <div className='col-6 mt-2' key={repo.id}>
+                    <RepoCard repo={repo} />
+                  </div>
+                  {(index + 1) % 2 === 0 && <div className='w-100'></div>}
+                </>
+              })}
+            </div>
+          </>}
+      </div>
     </div>
-  
   );
 }
 
